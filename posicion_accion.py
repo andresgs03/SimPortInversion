@@ -8,7 +8,7 @@ class PosicionAccion:
     def comprar(self, cantidad, costo):
         self.cantidad += cantidad
         self.costo_total += costo
-
+        
     def vender(self, cantidad):
         if cantidad > self.cantidad or cantidad <= 0:
             return False
