@@ -1,10 +1,10 @@
 class Accion:
-    def __init__(self, nombre, ticker):
+    def __init__(self, nombre: str, ticker: str) -> None:
         self.nombre = nombre
         self.ticker = ticker
 
-    def obtener_nombre(self):
+    def obtener_nombre(self) -> str:
         return self.nombre
 
-    def obtener_ticker(self):
+    def obtener_ticker(self) -> str:
         return self.ticker
