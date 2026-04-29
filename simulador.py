@@ -129,6 +129,7 @@ class Simulador:
         print("\n===== RENTABILIDADES =====")
         print(f"Rentabilidad acumulada del portafolio: {self.portafolio.rentabilidad_acumulada(self.mercado):.2f}%")
         print(f"Rentabilidad diaria: {self.portafolio.rentabilidad_diaria():.2f}%")
+        print(f"Ganancia realizada acumulada: {self.portafolio.ganancia_realizada_acumulada:.2f} USD")
 
     def mostrar_graficas(self):
         print("Función de gráficas en desarrollo...")

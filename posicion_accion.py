@@ -11,18 +11,21 @@ class PosicionAccion:
         
     def vender(self, cantidad):
         if cantidad > self.cantidad or cantidad <= 0:
-            return False
+            return False, 0.0
 
         if self.cantidad > 0:
             costo_promedio = self.costo_total / self.cantidad
-            self.costo_total -= costo_promedio * cantidad
+            costo_retirado = costo_promedio * cantidad
+        else:
+            costo_retirado = 0.0
 
+        self.costo_total -= costo_retirado
         self.cantidad -= cantidad
 
         if self.cantidad == 0:
             self.costo_total = 0.0
 
-        return True
+        return True, costo_retirado
 
     def agregar_dividendo(self, valor):
         self.dividendos_acumulados += valor

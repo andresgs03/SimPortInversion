@@ -27,72 +27,74 @@ class Mercado:
     def descargar_datos(self):
         for accion in self.acciones_disponibles:
             ticker = accion.obtener_ticker()
-
             try:
                 historial = yf.Ticker(ticker).history(period="6mo", auto_adjust=False, actions=True)
-
                 if historial.empty:
                     self.datos_historicos[ticker] = pd.DataFrame()
                     continue
-
                 historial.index = pd.to_datetime(historial.index).strftime("%Y-%m-%d")
                 self.datos_historicos[ticker] = historial
-
             except Exception:
                 self.datos_historicos[ticker] = pd.DataFrame()
 
         fechas = self.obtener_todas_las_fechas()
-
         if len(fechas) > 0:
             self.fecha_inicio = fechas[0]
             self.fecha_fin = fechas[-1]
 
     def obtener_todas_las_fechas(self):
         fechas = set()
-
         for ticker in self.datos_historicos:
             datos = self.datos_historicos[ticker]
             if not datos.empty:
                 for fecha in datos.index.tolist():
                     fechas.add(fecha)
-
-        fechas = list(fechas)
-        fechas.sort()
-        return fechas
+        fechas_ordenadas = list(fechas)
+        fechas_ordenadas.sort()
+        return fechas_ordenadas
 
     def obtener_acciones(self):
         return self.acciones_disponibles
 
+    # --- FIX: BUSCAR FECHA HACIA ATRÁS ---
     def ajustar_fecha_habil(self, fecha):
         fechas = self.obtener_todas_las_fechas()
-
         if len(fechas) == 0:
             return None
 
         fecha = pd.to_datetime(fecha).strftime("%Y-%m-%d")
-
+        candidata = None
+        
         for fecha_disponible in fechas:
-            if fecha_disponible >= fecha:
-                return fecha_disponible
+            if fecha_disponible <= fecha:
+                candidata = fecha_disponible
+            else:
+                break
 
-        return fechas[-1]
+        if candidata is None:
+            return fechas[0]
+        return candidata
 
     def _ajustar_fecha_para_ticker(self, ticker, fecha):
         if ticker not in self.datos_historicos:
             return None
-
         datos = self.datos_historicos[ticker]
         if datos.empty:
             return None
 
         fecha = pd.to_datetime(fecha).strftime("%Y-%m-%d")
         fechas = datos.index.tolist()
-
+        candidata = None
+        
         for fecha_disponible in fechas:
-            if fecha_disponible >= fecha:
-                return fecha_disponible
+            if fecha_disponible <= fecha:
+                candidata = fecha_disponible
+            else:
+                break
 
-        return fechas[-1]
+        if candidata is None:
+            return fechas[0]
+        return candidata
 
     def obtener_cierre(self, ticker, fecha):
         fecha_ajustada = self._ajustar_fecha_para_ticker(ticker, fecha)
