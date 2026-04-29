@@ -1,5 +1,8 @@
+from simulador import Simulador
+
 def main():
-    pass
+    simulador = Simulador()
+    simulador.ejecutar()
 
 if __name__ == "__main__":
     main()
