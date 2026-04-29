@@ -5,6 +5,7 @@ from datetime import datetime
 from posicion_accion import PosicionAccion
 from cdt import CDT
 
+
 class Portafolio:
     def __init__(self, capital_inicial, fecha_actual):
         self.capital_inicial = capital_inicial
@@ -114,7 +115,6 @@ class Portafolio:
         comision = self._calcular_comision(ingreso_bruto)
         ingreso_neto = ingreso_bruto - comision
 
-        # FIX: Capturamos el costo y actualizamos la ganancia histórica
         exito, costo_retirado = posicion.vender(cantidad)
 
         if not exito:
@@ -144,14 +144,13 @@ class Portafolio:
 
         return True, "Venta realizada correctamente."
 
-def comprar_cdt(self, monto, tasa_anual, fecha_vencimiento):
+    def comprar_cdt(self, monto, tasa_anual, fecha_vencimiento):
         if monto <= 0:
             return False, "El monto debe ser mayor que cero."
 
         if tasa_anual <= 0:
             return False, "La tasa anual debe ser mayor que cero."
 
-        # --- FIX: VALIDACIÓN DE FECHA ---
         try:
             fecha_actual_dt = datetime.strptime(self.fecha_actual, "%Y-%m-%d")
             fecha_vencimiento_dt = datetime.strptime(fecha_vencimiento, "%Y-%m-%d")
@@ -202,6 +201,7 @@ def comprar_cdt(self, monto, tasa_anual, fecha_vencimiento):
                 if dividendo > 0:
                     valor_recibido = dividendo * posicion.obtener_cantidad()
                     self.efectivo += valor_recibido
+                    self.dividendos_recibidos_acumulados += valor_recibido
                     posicion.agregar_dividendo(valor_recibido)
 
                     self.registrar_transaccion({
@@ -288,17 +288,20 @@ def comprar_cdt(self, monto, tasa_anual, fecha_vencimiento):
     def rentabilidad_diaria(self):
         if len(self.historico) < 2:
             return 0.0
+
         valor_hoy = self.historico[-1]["valor_total"]
         valor_ayer = self.historico[-2]["valor_total"]
+
         if valor_ayer == 0:
             return 0.0
+
         return ((valor_hoy - valor_ayer) / valor_ayer) * 100
 
     def composicion(self, mercado):
         return {
-            "efectivo": self.efectivo,
-            "acciones": self.valor_acciones(mercado),
-            "cdts": self.valor_cdts()
+            "Efectivo": self.efectivo,
+            "Acciones": self.valor_acciones(mercado),
+            "CDTs": self.valor_cdts()
         }
 
     def registrar_historico(self, mercado):
@@ -328,30 +331,64 @@ def comprar_cdt(self, monto, tasa_anual, fecha_vencimiento):
         print(f"Valor en CDTs: {self.valor_cdts():.2f} USD")
         print(f"Valor total del portafolio: {self.valor_total(mercado):.2f} USD")
         print(f"Comisiones acumuladas: {self.comisiones_acumuladas:.2f} USD")
+        print(f"Dividendos recibidos acumulados: {self.dividendos_recibidos_acumulados:.2f} USD")
+        print(f"Ganancia realizada acumulada: {self.ganancia_realizada_acumulada:.2f} USD")
 
         print("\n--- POSICIONES EN ACCIONES ---")
         if len(self.posiciones_acciones) == 0:
             print("No hay posiciones en acciones.")
         else:
+            encabezado = (
+                f"{'Activo':<12}"
+                f"{'Ticker':<14}"
+                f"{'Cant.':>8}"
+                f"{'Precio':>12}"
+                f"{'Valor':>14}"
+                f"{'Costo':>14}"
+                f"{'Dividendos':>14}"
+                f"{'Rentab.%':>12}"
+            )
+            print(encabezado)
+            print("-" * len(encabezado))
+
             for posicion in self.posiciones_acciones:
                 ticker = posicion.accion.obtener_ticker()
                 precio = mercado.obtener_cierre(ticker, self.fecha_actual)
-                print(f"Acción: {posicion.accion.obtener_nombre()} ({ticker})")
-                print(f"Cantidad: {posicion.obtener_cantidad()}")
-                print(f"Precio actual: {precio:.2f} USD")
-                print(f"Valor actual: {posicion.valor_actual(precio):.2f} USD")
-                print(f"Costo total: {posicion.obtener_costo_total():.2f} USD")
-                print(f"Rentabilidad: {posicion.rentabilidad(precio):.2f}%")
-                print("")
 
-        print("--- CDTs ---")
+                print(
+                    f"{posicion.accion.obtener_nombre():<12}"
+                    f"{ticker:<14}"
+                    f"{posicion.obtener_cantidad():>8}"
+                    f"{precio:>12.2f}"
+                    f"{posicion.valor_actual(precio):>14.2f}"
+                    f"{posicion.obtener_costo_total():>14.2f}"
+                    f"{posicion.dividendos_acumulados:>14.2f}"
+                    f"{posicion.rentabilidad(precio):>12.2f}"
+                )
+
+        print("\n--- CDTs ---")
         if len(self.cdts) == 0:
             print("No hay CDTs registrados.")
         else:
+            encabezado_cdt = (
+                f"{'ID':<6}"
+                f"{'Monto Inicial':>15}"
+                f"{'Tasa':>10}"
+                f"{'Inicio':>14}"
+                f"{'Vencimiento':>14}"
+                f"{'Valor Actual':>16}"
+                f"{'Estado':>12}"
+            )
+            print(encabezado_cdt)
+            print("-" * len(encabezado_cdt))
+
             for cdt in self.cdts:
-                print(f"CDT #{cdt.id_cdt}")
-                print(f"Monto inicial: {cdt.monto_inicial:.2f} USD")
-                print(f"Tasa anual: {cdt.tasa_anual:.4f}")
-                print(f"Fecha vencimiento: {cdt.fecha_vencimiento}")
-                print(f"Valor actual: {cdt.valor_actual:.2f} USD")
-                print("")
+                print(
+                    f"{cdt.id_cdt:<6}"
+                    f"{cdt.monto_inicial:>15.2f}"
+                    f"{cdt.tasa_anual:>10.4f}"
+                    f"{cdt.fecha_inicio:>14}"
+                    f"{cdt.fecha_vencimiento:>14}"
+                    f"{cdt.valor_actual:>16.2f}"
+                    f"{cdt.obtener_estado():>12}"
+                )
