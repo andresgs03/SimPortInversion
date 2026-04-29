@@ -7,22 +7,22 @@ from cdt import CDT
 
 
 class Portafolio:
-    def __init__(self, capital_inicial, fecha_actual):
+    def __init__(self, capital_inicial: float, fecha_actual: str) -> None:
         self.capital_inicial = capital_inicial
         self.efectivo = capital_inicial
-        self.posiciones_acciones = []
-        self.cdts = []
+        self.posiciones_acciones: list[PosicionAccion] = []
+        self.cdts: list[CDT] = []
         self.comisiones_acumuladas = 0.0
         self.dividendos_recibidos_acumulados = 0.0
         self.ganancia_realizada_acumulada = 0.0
         self.fecha_actual = fecha_actual
-        self.historico = []
+        self.historico: list[dict[str, float | str]] = []
         self.archivo_transacciones = "transacciones.csv"
         self.siguiente_id_cdt = 1
 
         self._inicializar_archivo_transacciones()
 
-    def _inicializar_archivo_transacciones(self):
+    def _inicializar_archivo_transacciones(self) -> None:
         if not os.path.exists(self.archivo_transacciones):
             with open(self.archivo_transacciones, mode="w", newline="", encoding="utf-8") as archivo:
                 escritor = csv.writer(archivo)
@@ -31,19 +31,19 @@ class Portafolio:
                     "precio", "monto", "comision", "efectivo_resultante", "detalle"
                 ])
 
-    def _calcular_comision(self, monto):
+    def _calcular_comision(self, monto: float) -> float:
         comision = monto * 0.005
         if comision < 1:
             comision = 1.0
         return comision
 
-    def _buscar_posicion(self, ticker):
+    def _buscar_posicion(self, ticker: str) -> PosicionAccion | None:
         for posicion in self.posiciones_acciones:
             if posicion.accion.obtener_ticker() == ticker:
                 return posicion
         return None
 
-    def comprar_accion(self, accion, precio, cantidad):
+    def comprar_accion(self, accion, precio: float, cantidad: int) -> tuple[bool, str]:
         if cantidad <= 0:
             return False, "La cantidad debe ser mayor que cero."
 
@@ -75,12 +75,12 @@ class Portafolio:
             "monto": costo_bruto,
             "comision": comision,
             "efectivo_resultante": self.efectivo,
-            "detalle": "Compra de acciones"
+            "detalle": f"Compra de {cantidad} acciones a {precio:.2f} USD"
         })
 
         return True, "Compra realizada correctamente."
 
-    def calcular_cantidad_por_monto(self, precio, monto):
+    def calcular_cantidad_por_monto(self, precio: float, monto: float) -> int:
         if precio <= 0 or monto <= 0:
             return 0
 
@@ -98,7 +98,7 @@ class Portafolio:
 
         return 0
 
-    def vender_accion(self, ticker, precio, cantidad):
+    def vender_accion(self, ticker: str, precio: float, cantidad: int) -> tuple[bool, str]:
         posicion = self._buscar_posicion(ticker)
 
         if posicion is None:
@@ -144,7 +144,7 @@ class Portafolio:
 
         return True, "Venta realizada correctamente."
 
-    def comprar_cdt(self, monto, tasa_anual, fecha_vencimiento):
+    def comprar_cdt(self, monto: float, tasa_anual: float, fecha_vencimiento: str) -> tuple[bool, str]:
         if monto <= 0:
             return False, "El monto debe ser mayor que cero."
 
@@ -181,16 +181,16 @@ class Portafolio:
             "activo": "CDT",
             "ticker": "CDT",
             "cantidad": 1,
-            "precio": 0,
+            "precio": 0.0,
             "monto": monto,
-            "comision": 0,
+            "comision": 0.0,
             "efectivo_resultante": self.efectivo,
-            "detalle": f"Tasa anual: {tasa_anual}, vencimiento: {fecha_vencimiento}"
+            "detalle": f"Compra CDT | Tasa anual: {tasa_anual:.4f} | Vencimiento: {fecha_vencimiento}"
         })
 
         return True, "CDT comprado correctamente."
 
-    def aplicar_dividendos(self, mercado, fecha_anterior, nueva_fecha):
+    def aplicar_dividendos(self, mercado, fecha_anterior: str, nueva_fecha: str) -> None:
         fechas = mercado.obtener_fechas_entre(fecha_anterior, nueva_fecha)
 
         for fecha in fechas:
@@ -212,12 +212,12 @@ class Portafolio:
                         "cantidad": posicion.obtener_cantidad(),
                         "precio": dividendo,
                         "monto": valor_recibido,
-                        "comision": 0,
+                        "comision": 0.0,
                         "efectivo_resultante": self.efectivo,
-                        "detalle": "Pago de dividendo"
+                        "detalle": f"Pago de dividendo de {dividendo:.4f} USD por acción"
                     })
 
-    def liquidar_cdts(self):
+    def liquidar_cdts(self) -> None:
         for cdt in self.cdts:
             if cdt.activo:
                 cdt.actualizar_valor(self.fecha_actual)
@@ -232,14 +232,14 @@ class Portafolio:
                         "activo": "CDT",
                         "ticker": "CDT",
                         "cantidad": 1,
-                        "precio": 0,
+                        "precio": 0.0,
                         "monto": valor_liquidado,
-                        "comision": 0,
+                        "comision": 0.0,
                         "efectivo_resultante": self.efectivo,
-                        "detalle": f"Liquidación automática CDT #{cdt.id_cdt}"
+                        "detalle": f"Liquidación automática del CDT #{cdt.id_cdt}"
                     })
 
-    def actualizar_portafolio(self, mercado, nueva_fecha):
+    def actualizar_portafolio(self, mercado, nueva_fecha: str) -> tuple[bool, str]:
         fecha_ajustada = mercado.ajustar_fecha_habil(nueva_fecha)
 
         if fecha_ajustada is None:
@@ -262,49 +262,54 @@ class Portafolio:
 
         return True, f"Portafolio actualizado a la fecha {self.fecha_actual}."
 
-    def valor_acciones(self, mercado):
+    def valor_acciones(self, mercado) -> float:
         total = 0.0
+
         for posicion in self.posiciones_acciones:
             ticker = posicion.accion.obtener_ticker()
             precio = mercado.obtener_cierre(ticker, self.fecha_actual)
             total += posicion.valor_actual(precio)
+
         return total
 
-    def valor_cdts(self):
+    def valor_cdts(self) -> float:
         total = 0.0
+
         for cdt in self.cdts:
             if cdt.activo:
                 total += cdt.valor_actual
+
         return total
 
-    def valor_total(self, mercado):
+    def valor_total(self, mercado) -> float:
         return self.efectivo + self.valor_acciones(mercado) + self.valor_cdts()
 
-    def rentabilidad_acumulada(self, mercado):
+    def rentabilidad_acumulada(self, mercado) -> float:
         if self.capital_inicial <= 0:
             return 0.0
+
         return ((self.valor_total(mercado) - self.capital_inicial) / self.capital_inicial) * 100
 
-    def rentabilidad_diaria(self):
+    def rentabilidad_diaria(self) -> float:
         if len(self.historico) < 2:
             return 0.0
 
-        valor_hoy = self.historico[-1]["valor_total"]
-        valor_ayer = self.historico[-2]["valor_total"]
+        valor_hoy = float(self.historico[-1]["valor_total"])
+        valor_ayer = float(self.historico[-2]["valor_total"])
 
         if valor_ayer == 0:
             return 0.0
 
         return ((valor_hoy - valor_ayer) / valor_ayer) * 100
 
-    def composicion(self, mercado):
+    def composicion(self, mercado) -> dict[str, float]:
         return {
             "Efectivo": self.efectivo,
             "Acciones": self.valor_acciones(mercado),
             "CDTs": self.valor_cdts()
         }
 
-    def registrar_historico(self, mercado):
+    def registrar_historico(self, mercado) -> None:
         registro = {
             "fecha": self.fecha_actual,
             "valor_total": self.valor_total(mercado),
@@ -318,16 +323,23 @@ class Portafolio:
         else:
             self.historico.append(registro)
 
-    def registrar_transaccion(self, datos):
+    def registrar_transaccion(self, datos: dict) -> None:
         with open(self.archivo_transacciones, mode="a", newline="", encoding="utf-8") as archivo:
             escritor = csv.writer(archivo)
             escritor.writerow([
-                datos["fecha"], datos["tipo_operacion"], datos["activo"], datos["ticker"],
-                datos["cantidad"], datos["precio"], datos["monto"], datos["comision"],
-                datos["efectivo_resultante"], datos["detalle"]
+                datos["fecha"],
+                datos["tipo_operacion"],
+                datos["activo"],
+                datos["ticker"],
+                datos["cantidad"],
+                datos["precio"],
+                datos["monto"],
+                datos["comision"],
+                datos["efectivo_resultante"],
+                datos["detalle"]
             ])
 
-    def mostrar_resumen(self, mercado):
+    def mostrar_resumen(self, mercado) -> None:
         print("\n===== RESUMEN DEL PORTAFOLIO =====")
         print(f"Fecha actual: {self.fecha_actual}")
         print(f"Capital inicial: {self.capital_inicial:.2f} USD")
