@@ -305,13 +305,18 @@ class Portafolio:
         }
 
     def registrar_historico(self, mercado):
-        self.historico.append({
+        registro = {
             "fecha": self.fecha_actual,
             "valor_total": self.valor_total(mercado),
             "efectivo": self.efectivo,
             "acciones": self.valor_acciones(mercado),
             "cdts": self.valor_cdts()
-        })
+        }
+
+        if len(self.historico) > 0 and self.historico[-1]["fecha"] == self.fecha_actual:
+            self.historico[-1] = registro
+        else:
+            self.historico.append(registro)
 
     def registrar_transaccion(self, datos):
         with open(self.archivo_transacciones, mode="a", newline="", encoding="utf-8") as archivo:
