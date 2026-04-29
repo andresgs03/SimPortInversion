@@ -1,3 +1,41 @@
 # Simulador de Portafolio de Inversión
 
-Este proyecto es un simulador financiero desarrollado en Python que permite gestionar y monitorear la rentabilidad de un portafolio diversificado, incluyendo renta variable (acciones) y renta fija (CDTs).
+Simulador financiero desarrollado en Python para gestionar y monitorear la rentabilidad de un portafolio diversificado, incluyendo renta variable mediante acciones descargadas desde Yahoo Finance y renta fija mediante CDTs.
+
+## Características principales
+
+- Consulta de precios de cierre, mínimo y máximo usando `yfinance`.
+- Universo fijo de 10 acciones.
+- Compra y venta de acciones con validación de precio dentro del rango diario.
+- Comisión del bróker del 0.5% con mínimo de 1 USD.
+- Compra de CDTs con valorización diaria y fecha de vencimiento real.
+- Liquidación automática de CDTs vencidos.
+- Registro de transacciones en archivo CSV.
+- Cálculo de rentabilidad acumulada, rentabilidad diaria y ganancia realizada.
+- Manejo de dividendos cuando existen en los datos descargados.
+- Gráficas de evolución, rentabilidad y composición del portafolio.
+
+## Acciones disponibles
+
+- GEB.CL
+- PFCIBEST.CL
+- PFAVAL.CL
+- ISA.CL
+- ECOPETROL.CL
+- INTC
+- MU
+- NVDA
+- TSM
+- AMZN
+
+## Arquitectura UML
+
+<img width="1029" height="1200" alt="image" src="https://github.com/user-attachments/assets/094081ef-4ca0-4c55-bb79-4a4aa3dbd822" />
+
+
+## Instalación
+
+Instalar las dependencias necesarias:
+
+```bash
+pip install -r requirements.txt
