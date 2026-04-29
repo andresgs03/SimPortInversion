@@ -1,17 +1,23 @@
 import csv
-import matplotlib.pyplot as plt
 from datetime import datetime
+
+import matplotlib.pyplot as plt
 
 from mercado import Mercado
 from portafolio import Portafolio
 
 
 class Simulador:
-    def __init__(self):
+    def __init__(self) -> None:
         self.mercado = Mercado()
-        self.portafolio = None
+        self.portafolio: Portafolio | None = None
 
-    def leer_entero(self, mensaje, minimo=None, maximo=None):
+    def leer_entero(
+        self,
+        mensaje: str,
+        minimo: int | None = None,
+        maximo: int | None = None
+    ) -> int:
         while True:
             try:
                 valor = int(input(mensaje))
@@ -29,7 +35,7 @@ class Simulador:
             except ValueError:
                 print("Entrada inválida. Debe ingresar un número entero.")
 
-    def leer_flotante(self, mensaje, minimo=None):
+    def leer_flotante(self, mensaje: str, minimo: float | None = None) -> float:
         while True:
             try:
                 valor = float(input(mensaje))
@@ -43,7 +49,7 @@ class Simulador:
             except ValueError:
                 print("Entrada inválida. Debe ingresar un número.")
 
-    def leer_fecha(self, mensaje):
+    def leer_fecha(self, mensaje: str) -> str:
         while True:
             fecha = input(mensaje).strip()
 
@@ -53,10 +59,10 @@ class Simulador:
             except ValueError:
                 print("Fecha inválida. Use el formato YYYY-MM-DD.")
 
-    def pausar(self):
+    def pausar(self) -> None:
         input("\nPresione ENTER para continuar...")
 
-    def iniciar(self):
+    def iniciar(self) -> None:
         print("Cargando acciones disponibles...")
         self.mercado.cargar_acciones()
 
@@ -78,7 +84,9 @@ class Simulador:
         self.portafolio = Portafolio(capital_inicial, fecha_ajustada)
         self.portafolio.registrar_historico(self.mercado)
 
-    def mostrar_menu(self):
+    def mostrar_menu(self) -> None:
+        assert self.portafolio is not None
+
         print("\n===== SIMULADOR DE PORTAFOLIO =====")
         print(f"Fecha actual de simulación: {self.portafolio.fecha_actual}")
         print(f"Efectivo disponible: {self.portafolio.efectivo:.2f} USD")
@@ -94,8 +102,22 @@ class Simulador:
         print("9. Mostrar gráficas")
         print("10. Salir")
 
-    def ver_acciones_disponibles(self):
+    def ver_acciones_disponibles(self) -> None:
+        assert self.portafolio is not None
+
         print("\n===== ACCIONES DISPONIBLES =====")
+        encabezado = (
+            f"{'N°':<4}"
+            f"{'Activo':<12}"
+            f"{'Ticker':<14}"
+            f"{'Cierre':>12}"
+            f"{'Min':>12}"
+            f"{'Max':>12}"
+            f"{'Dividendo':>14}"
+        )
+        print(encabezado)
+        print("-" * len(encabezado))
+
         acciones = self.mercado.obtener_acciones()
 
         for i, accion in enumerate(acciones, start=1):
@@ -105,14 +127,19 @@ class Simulador:
             maximo = self.mercado.obtener_maximo(ticker, self.portafolio.fecha_actual)
             dividendo = self.mercado.obtener_dividendo(ticker, self.portafolio.fecha_actual)
 
-            print(f"{i}. {accion.obtener_nombre()} ({ticker})")
-            print(f"   Cierre: {cierre:.2f} USD")
-            print(f"   Mínimo: {minimo:.2f} USD")
-            print(f"   Máximo: {maximo:.2f} USD")
-            print(f"   Dividendo: {dividendo:.4f}")
-            print("")
+            print(
+                f"{i:<4}"
+                f"{accion.obtener_nombre():<12}"
+                f"{ticker:<14}"
+                f"{cierre:>12.2f}"
+                f"{minimo:>12.2f}"
+                f"{maximo:>12.2f}"
+                f"{dividendo:>14.4f}"
+            )
 
-    def comprar_acciones(self):
+    def comprar_acciones(self) -> None:
+        assert self.portafolio is not None
+
         acciones = self.mercado.obtener_acciones()
 
         print("\n===== COMPRA DE ACCIONES =====")
@@ -164,7 +191,9 @@ class Simulador:
             if exito:
                 print(f"Cantidad comprada: {cantidad}")
 
-    def vender_acciones(self):
+    def vender_acciones(self) -> None:
+        assert self.portafolio is not None
+
         print("\n===== VENTA DE ACCIONES =====")
 
         if len(self.portafolio.posiciones_acciones) == 0:
@@ -172,9 +201,16 @@ class Simulador:
             return
 
         for i, posicion in enumerate(self.portafolio.posiciones_acciones, start=1):
-            print(f"{i}. {posicion.accion.obtener_nombre()} ({posicion.accion.obtener_ticker()}) - Cantidad: {posicion.obtener_cantidad()}")
+            print(
+                f"{i}. {posicion.accion.obtener_nombre()} "
+                f"({posicion.accion.obtener_ticker()}) - Cantidad: {posicion.obtener_cantidad()}"
+            )
 
-        opcion = self.leer_entero("Seleccione la posición a vender: ", 1, len(self.portafolio.posiciones_acciones))
+        opcion = self.leer_entero(
+            "Seleccione la posición a vender: ",
+            1,
+            len(self.portafolio.posiciones_acciones)
+        )
 
         posicion = self.portafolio.posiciones_acciones[opcion - 1]
         ticker = posicion.accion.obtener_ticker()
@@ -200,7 +236,9 @@ class Simulador:
             self.portafolio.registrar_historico(self.mercado)
         print(mensaje)
 
-    def comprar_cdt(self):
+    def comprar_cdt(self) -> None:
+        assert self.portafolio is not None
+
         print("\n===== COMPRA DE CDT =====")
 
         monto = self.leer_flotante("Ingrese el monto a invertir: ", 0.01)
@@ -212,10 +250,13 @@ class Simulador:
             self.portafolio.registrar_historico(self.mercado)
         print(mensaje)
 
-    def ver_portafolio(self):
+    def ver_portafolio(self) -> None:
+        assert self.portafolio is not None
         self.portafolio.mostrar_resumen(self.mercado)
 
-    def ver_transacciones(self):
+    def ver_transacciones(self) -> None:
+        assert self.portafolio is not None
+
         print("\n===== HISTORIAL DE TRANSACCIONES =====")
 
         try:
@@ -226,13 +267,25 @@ class Simulador:
                 print("No hay transacciones registradas.")
                 return
 
+            anchos = [0] * len(lector[0])
+
             for fila in lector:
-                print(" | ".join(fila))
+                for i, valor in enumerate(fila):
+                    if len(valor) > anchos[i]:
+                        anchos[i] = len(valor)
+
+            for fila in lector:
+                linea = ""
+                for i, valor in enumerate(fila):
+                    linea += f"{valor:<{anchos[i] + 2}}"
+                print(linea)
 
         except FileNotFoundError:
             print("No existe el archivo de transacciones.")
 
-    def cambiar_fecha(self):
+    def cambiar_fecha(self) -> None:
+        assert self.portafolio is not None
+
         nueva_fecha = self.leer_fecha("Ingrese la nueva fecha (YYYY-MM-DD): ")
         fecha_ajustada = self.mercado.ajustar_fecha_habil(nueva_fecha)
 
@@ -246,13 +299,26 @@ class Simulador:
         exito, mensaje = self.portafolio.actualizar_portafolio(self.mercado, fecha_ajustada)
         print(mensaje)
 
-    def ver_rentabilidades(self):
+    def ver_rentabilidades(self) -> None:
+        assert self.portafolio is not None
+
         print("\n===== RENTABILIDADES =====")
         print(f"Rentabilidad acumulada del portafolio: {self.portafolio.rentabilidad_acumulada(self.mercado):.2f}%")
         print(f"Rentabilidad diaria: {self.portafolio.rentabilidad_diaria():.2f}%")
         print(f"Ganancia realizada acumulada: {self.portafolio.ganancia_realizada_acumulada:.2f} USD")
+        print(f"Dividendos recibidos acumulados: {self.portafolio.dividendos_recibidos_acumulados:.2f} USD")
 
-    def mostrar_graficas(self):
+        valor_acciones = self.portafolio.valor_acciones(self.mercado)
+        valor_cdts = self.portafolio.valor_cdts()
+        valor_total = self.portafolio.valor_total(self.mercado)
+
+        print(f"Valor actual en renta variable: {valor_acciones:.2f} USD")
+        print(f"Valor actual en renta fija: {valor_cdts:.2f} USD")
+        print(f"Valor total del portafolio: {valor_total:.2f} USD")
+
+    def mostrar_graficas(self) -> None:
+        assert self.portafolio is not None
+
         if len(self.portafolio.historico) == 0:
             print("No hay histórico suficiente para graficar.")
             return
@@ -262,7 +328,7 @@ class Simulador:
 
         rentabilidades = []
         for valor in valores:
-            rent = ((valor - self.portafolio.capital_inicial) / self.portafolio.capital_inicial) * 100
+            rent = ((float(valor) - self.portafolio.capital_inicial) / self.portafolio.capital_inicial) * 100
             rentabilidades.append(rent)
 
         composicion = self.portafolio.composicion(self.mercado)
@@ -293,7 +359,7 @@ class Simulador:
 
         plt.show()
 
-    def ejecutar(self):
+    def ejecutar(self) -> None:
         self.iniciar()
 
         if self.portafolio is None:
