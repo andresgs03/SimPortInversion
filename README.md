@@ -30,8 +30,7 @@ Simulador financiero desarrollado en Python para gestionar y monitorear la renta
 
 ## Arquitectura UML
 
-<img width="1029" height="1200" alt="image" src="https://github.com/user-attachments/assets/094081ef-4ca0-4c55-bb79-4a4aa3dbd822" />
-
+![Diagrama UML](img/uml_portafolio.png)
 
 ## Instalación
 
@@ -39,3 +38,4 @@ Instalar las dependencias necesarias:
 
 ```bash
 pip install -r requirements.txt
+python main.py
