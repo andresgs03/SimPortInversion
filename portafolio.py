@@ -12,6 +12,8 @@ class Portafolio:
         self.posiciones_acciones = []
         self.cdts = []
         self.comisiones_acumuladas = 0.0
+        self.dividendos_recibidos_acumulados = 0.0
+        self.ganancia_realizada_acumulada = 0.0
         self.fecha_actual = fecha_actual
         self.historico = []
         self.archivo_transacciones = "transacciones.csv"
@@ -107,14 +109,19 @@ class Portafolio:
         if cantidad > posicion.obtener_cantidad():
             return False, "La cantidad a vender supera la posición disponible."
 
+        nombre_activo = posicion.accion.obtener_nombre()
         ingreso_bruto = precio * cantidad
         comision = self._calcular_comision(ingreso_bruto)
         ingreso_neto = ingreso_bruto - comision
 
-        exito = posicion.vender(cantidad)
+        # FIX: Capturamos el costo y actualizamos la ganancia histórica
+        exito, costo_retirado = posicion.vender(cantidad)
 
         if not exito:
             return False, "No fue posible vender la cantidad indicada."
+
+        ganancia_realizada = ingreso_neto - costo_retirado
+        self.ganancia_realizada_acumulada += ganancia_realizada
 
         self.efectivo += ingreso_neto
         self.comisiones_acumuladas += comision
@@ -125,14 +132,14 @@ class Portafolio:
         self.registrar_transaccion({
             "fecha": self.fecha_actual,
             "tipo_operacion": "venta_accion",
-            "activo": ticker,
+            "activo": nombre_activo,
             "ticker": ticker,
             "cantidad": cantidad,
             "precio": precio,
             "monto": ingreso_bruto,
             "comision": comision,
             "efectivo_resultante": self.efectivo,
-            "detalle": "Venta de acciones"
+            "detalle": f"Venta de {cantidad} acciones a {precio:.2f} USD | Ganancia realizada: {ganancia_realizada:.2f} USD"
         })
 
         return True, "Venta realizada correctamente."
