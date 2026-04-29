@@ -1,4 +1,5 @@
 import csv
+import matplotlib.pyplot as plt
 from datetime import datetime
 
 from mercado import Mercado
@@ -252,7 +253,45 @@ class Simulador:
         print(f"Ganancia realizada acumulada: {self.portafolio.ganancia_realizada_acumulada:.2f} USD")
 
     def mostrar_graficas(self):
-        print("Gráficas en desarrollo...")
+        if len(self.portafolio.historico) == 0:
+            print("No hay histórico suficiente para graficar.")
+            return
+
+        fechas = [dato["fecha"] for dato in self.portafolio.historico]
+        valores = [dato["valor_total"] for dato in self.portafolio.historico]
+
+        rentabilidades = []
+        for valor in valores:
+            rent = ((valor - self.portafolio.capital_inicial) / self.portafolio.capital_inicial) * 100
+            rentabilidades.append(rent)
+
+        composicion = self.portafolio.composicion(self.mercado)
+
+        plt.figure(figsize=(10, 5))
+        plt.plot(fechas, valores, marker="o")
+        plt.title("Evolución del valor total del portafolio")
+        plt.xlabel("Fecha")
+        plt.ylabel("Valor total (USD)")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+
+        plt.figure(figsize=(10, 5))
+        plt.plot(fechas, rentabilidades, marker="o")
+        plt.title("Rentabilidad acumulada del portafolio")
+        plt.xlabel("Fecha")
+        plt.ylabel("Rentabilidad (%)")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+
+        plt.figure(figsize=(8, 5))
+        categorias = list(composicion.keys())
+        valores_composicion = list(composicion.values())
+        plt.bar(categorias, valores_composicion)
+        plt.title("Composición actual del portafolio")
+        plt.ylabel("Valor (USD)")
+        plt.tight_layout()
+
+        plt.show()
 
     def ejecutar(self):
         self.iniciar()
